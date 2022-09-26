@@ -9,6 +9,7 @@ require (
 	github.com/docker/docker v20.10.14+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/kinvolk/inspektor-gadget v0.8.0
 	helm.sh/helm/v3 v3.6.3
 	k8s.io/api v0.22.3
 	k8s.io/apimachinery v0.22.3
