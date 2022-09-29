@@ -19,8 +19,8 @@ patches:
 
 images:
 - name: periscope-linux
-  newName: loggcontainer.azurecr.io/periscope-local
-  newTag: v0.3.12
+  newName: loggeracr.azurecr.io/periscope-local
+  newTag: v0.3.13
 - name: periscope-windows
   newName: mcr.microsoft.com/aks/periscope-win
   newTag: latest
