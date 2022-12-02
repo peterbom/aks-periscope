@@ -37,6 +37,7 @@ var requiredImages = []string{
 	fmt.Sprintf("docker.io/openservicemesh/osm-healthcheck:v%s", osmVersion),
 	fmt.Sprintf("docker.io/openservicemesh/osm-injector:v%s", osmVersion),
 	fmt.Sprintf("docker.io/openservicemesh/osm-preinstall:v%s", osmVersion),
+	fmt.Sprintf("ghcr.io/inspektor-gadget/inspektor-gadget:v%s", gadgetVersion),
 	"k8s.gcr.io/build-image/debian-base:buster-v1.7.2",
 	"k8s.gcr.io/coredns/coredns:v1.8.6",
 	"k8s.gcr.io/etcd:3.5.1-0",
@@ -112,6 +113,7 @@ func pullDockerImages(client *dockerclient.Client, imagesToPull []string) error 
 			pullOutput, err := client.ImagePull(context.Background(), image, dockertypes.ImagePullOptions{})
 			if err != nil {
 				pullErrorsChan <- fmt.Errorf("error pulling image %s: %w", image, err)
+				return
 			}
 			defer pullOutput.Close()
 			_, err = io.Copy(os.Stdout, pullOutput)

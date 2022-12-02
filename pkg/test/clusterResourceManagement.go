@@ -143,7 +143,18 @@ func deployOsmApplications(clientset *kubernetes.Clientset, commandRunner *Tools
 	}
 
 	command, binds = getDeployOsmAppsCommand(kubeConfigFile.Name(), knownNamespaces)
-	_, err = commandRunner.Run(command, binds...)
+	output, err = commandRunner.Run(command, binds...)
+	fmt.Printf("%s\n%s\n\n", command, output)
+	if err != nil {
+		return fmt.Errorf("error installing applications for OSM: %w", err)
+	}
+
+	return nil
+}
+
+func deployInspektorGadget(commandRunner *ToolsCommandRunner, kubeConfigFile *os.File) error {
+	command, binds := getDeployInspektorGadgetCommand(kubeConfigFile.Name())
+	output, err := commandRunner.Run(command, binds...)
 	fmt.Printf("%s\n%s\n\n", command, output)
 	if err != nil {
 		return fmt.Errorf("error installing applications for OSM: %w", err)

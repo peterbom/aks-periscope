@@ -1,4 +1,4 @@
-package collector
+package inspektor_gadget
 
 import (
 	"testing"

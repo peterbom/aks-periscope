@@ -85,7 +85,7 @@ func TestSmiCollectorCollect(t *testing.T) {
 			}
 			data := c.GetData()
 
-			compareCollectorData(t, tt.want, data)
+			test.CompareCollectorData(t, tt.want, data)
 		})
 	}
 }

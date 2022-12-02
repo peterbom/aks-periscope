@@ -110,6 +110,15 @@ func getDeployOsmAppsCommand(hostKubeconfigPath string, knownNamespaces *KnownNa
 	return strings.Join(commands, " && "), []string{getKubeConfigBinding(hostKubeconfigPath)}
 }
 
+func getDeployInspektorGadgetCommand(hostKubeconfigPath string) (string, []string) {
+	commands := []string{
+		"kubectl gadget undeploy",
+		fmt.Sprintf("kubectl gadget deploy --image ghcr.io/inspektor-gadget/inspektor-gadget:v%s --image-pull-policy Never", gadgetVersion),
+	}
+
+	return strings.Join(commands, " && "), []string{getKubeConfigBinding(hostKubeconfigPath)}
+}
+
 func getTestDiagnosticsCommand(hostKubeconfigPath string) (string, []string) {
 	commands := []string{
 		"printf '\nDESCRIBE NODES\n'",
