@@ -99,6 +99,8 @@ func run(osIdentifier utils.OSIdentifier, knownFilePaths *utils.KnownFilePaths, 
 		collector.NewSystemLogsCollector(osIdentifier, runtimeInfo),
 		collector.NewSystemPerfCollector(config, runtimeInfo),
 		collector.NewWindowsLogsCollector(osIdentifier, runtimeInfo, knownFilePaths, fileSystem, 10*time.Second, 20*time.Minute),
+		collector.NewInspektorGadgetDNSTraceCollector(osIdentifier, runtimeInfo, traceWaiter, containerCollectionOptions),
+		collector.NewInspektorGadgetTCPTraceCollector(osIdentifier, runtimeInfo, traceWaiter, containerCollectionOptions),
 	}
 	collectors = addOSSpecificCollectors(collectors, config, runtimeInfo)
 
