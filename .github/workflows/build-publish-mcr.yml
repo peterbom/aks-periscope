@@ -46,6 +46,17 @@ jobs:
         tag_name: ${{ needs.common.outputs.version }}
         release_name: ${{ needs.common.outputs.version }}
         body: Publish ${{ needs.common.outputs.changes }}
+    - uses: azure/setup-kubectl@v3
+    - name: Build Deployment YAML
+      run: |
+        ./deployment/overlays/external/build-yaml.sh ${{ needs.common.outputs.version }} base
+        ./deployment/overlays/external/build-yaml.sh ${{ needs.common.outputs.version }} win-hpc
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          publish/base.yaml
+          publish/win-hpc.yaml
   publish:
     runs-on: ${{ matrix.os }}
     needs: common

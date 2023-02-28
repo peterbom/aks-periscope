@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aks-periscope
+
+bases:
+- ../../../base
+
+images:
+- name: periscope-linux
+  newName: mcr.microsoft.com/aks/periscope
+  newTag: "<<imageTag:string>>"
+- name: periscope-windows
+  newName: mcr.microsoft.com/aks/periscope
+  newTag: "<<imageTag:string>>"
+
+secretGenerator:
+- name: azureblob-secret
+  behavior: replace
+  literals:
+  - AZURE_BLOB_ACCOUNT_NAME=<<accountName:base64string>>
+  - AZURE_BLOB_CONTAINER_NAME=<<containerName:base64string>>
+  - AZURE_BLOB_SAS_KEY=<<sas:base64string>>
+
+configMapGenerator:
+- name: diagnostic-config
+  behavior: merge
+  literals:
+  - DIAGNOSTIC_RUN_ID=<<runId:string>>
