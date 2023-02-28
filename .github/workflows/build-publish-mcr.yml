@@ -54,6 +54,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ needs.common.outputs.version }}
         files: |
           publish/base.yaml
           publish/win-hpc.yaml
