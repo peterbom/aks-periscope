@@ -17,6 +17,7 @@ RUN go mod download
 COPY . .
 
 RUN go build -buildvcs=false ./cmd/aks-periscope
+<<<<<<< HEAD
 
 # Add dependencies for building nsenter
 RUN apt-get update && \
@@ -29,6 +30,8 @@ RUN tar -xf v2.38.tar.gz && mv util-linux-2.38 util-linux
 WORKDIR /build/util-linux
 RUN ./autogen.sh && ./configure
 RUN make LDFLAGS="--static" nsenter
+=======
+>>>>>>> allow building in a container (without .git folder)
 
 # Runner
 FROM $BASE_IMAGE
