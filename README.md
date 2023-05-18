@@ -10,8 +10,8 @@ Quick troubleshooting for your Azure Kubernetes Service (AKS) cluster.
 
 ![Icon](https://user-images.githubusercontent.com/33297523/69174241-4075a980-0ab6-11ea-9e33-76afc588e7fb.png)
 
+## Table of contents
 
-# Table of contents
 1. [Overview](#overview)
 2. [Data Privacy and Collection](#data-privacy-and-collection)
 3. [Compatibility](#compatibility)
@@ -114,6 +114,7 @@ configMapGenerator:
 ```
 
 All placeholders in angled brackets (`<`/`>`) need to be substituted for the relevant values:
+
 - `RELEASE_TAG`: The [Periscope release](https://github.com/Azure/aks-periscope/tags) to use.
 - `IMAGE_TAG`: The [Docker image tag](https://mcr.microsoft.com/en-us/product/aks/periscope/tags) to use.
 - `STORAGE_ACCOUNT_NAME`: The Azure storage account for Periscope to upload diagnostics to.
@@ -125,11 +126,13 @@ All placeholders in angled brackets (`<`/`>`) need to be substituted for the rel
 - `RUN_ID`: The identifier for a particular 'run' of Periscope, by convention a timestamp formatted as `YYYY-MM-DDThh-mm-ssZ`. This will become the topmost container within `CONTAINER_NAME`.
 
 You can then deploy Periscope by running:
+
 ```sh
 kubectl apply -k <path-to-kustomize-directory>
 ```
 
 To re-run without deleting and recreating resources, you can update the `RUN_ID` value in the ConfigMap. Depending on the expiry of the SAS token, you may need to update the `AZURE_BLOB_SAS_KEY` value in the Secret first:
+
 ```sh
 # Update SAS token (if expired)
 sas=...
@@ -241,8 +244,10 @@ To build and push a Docker image to an external registry (GHCR or ACR), and then
 ## Dependent Consuming Tools and Working Contract
 
 Dependent tools need access to an immutable, versioned Periscope resource definition. We provide two ways to obtain this:
+
 1. [Deprecated] Build the `external` overlay using instructions [here](./deployment/overlays/external/README.md) and include the output as a static resource in consuming tools. This will require runtime string substitution to configure appropriately for any given deployment, before being deployed using `kubectl -f`.
 2. Build a `Kustomize` overlay at runtime, referencing `https://github.com/azure/aks-periscope//deployment/base?ref={RELEASE_TAG}` as the base, and the appropriate MCR image tags for that release, as well as all configuration and secrets. This can then be deployed using `kubectl -k`. Example:
+
 ```yaml
 resources:
 - https://github.com/azure/aks-periscope//deployment/base?ref={RELEASE_TAG}
@@ -288,10 +293,8 @@ customresourcedefinition.apiextensions.k8s.io/diagnostics.aks-periscope.azure.gi
 
 To debug the `pod` logs in the `aks-periscope-dev` namespace deployed in the cluster:
 
-   * To get the pods in `aks-periscope-dev` namespace:
-       * `kubectl get pods -n aks-periscope-dev`
-   * To check the logs in each of the deployed pods:
-       * `kubectl logs <name-of-pod> -n aks-periscope-dev`
+- To get the pods in `aks-periscope-dev` namespace: `kubectl get pods -n aks-periscope-dev`
+- To check the logs in each of the deployed pods: `kubectl logs <name-of-pod> -n aks-periscope-dev`
 
 Feel free to contact aksperiscope@microsoft.com or open an issue with any feedback or questions about AKS Periscope. This is currently a work in progress, but look out for more capabilities to come!
 
@@ -309,5 +312,5 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-[programming guide]: docs/programmingguide.md
-[appendix]: docs/appendix.md
+[programming guide](docs/programmingguide.md): docs/programmingguide.md
+[appendix](docs/appendix.md): docs/appendix.md
