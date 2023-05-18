@@ -114,7 +114,7 @@ EOF
 # If using an ACR's admin account credentials to access the Periscope image:
 acr_name=...
 acr_username=$(az acr credential show -n $acr_name --query username --output tsv)
-acr_password=$(az acr credential show -n $acr_name --query passwords[0].value --output tsv)
+acr_password=$(az acr credential show -n $acr_name --query "passwords[0].value" --output tsv)
 cat <<EOF > ./deployment/overlays/temp/acr.dockerconfigjson
 {
     "auths": {

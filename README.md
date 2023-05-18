@@ -77,12 +77,12 @@ The [`Kustomize`](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kus
 
 ```yaml
 resources:
-- https://github.com/azure/aks-periscope//deployment/base?ref=<RELEASE_TAG>
+- https://github.com/azure/aks-periscope/deployment/base?ref=<RELEASE_TAG>
 
 # Optional feature components, uncomment if applicable:
 # - win-hpc: only useful if the cluster contains Windows nodes
 # components:
-# - https://github.com/Azure/aks-periscope//deployment/components/win-hpc?ref=<RELEASE_TAG>
+# - https://github.com/Azure/aks-periscope/deployment/components/win-hpc?ref=<RELEASE_TAG>
 
 images:
 - name: periscope-linux
