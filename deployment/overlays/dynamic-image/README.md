@@ -19,20 +19,12 @@ The steps required to build and publish an image depend on the registry you're p
 
 #### 1. Initial Setup
 
-If the AKS cluster and ACR are in a subscription in which you have the `Owner` role, you can attach the ACR to your cluster without the need to supply credentials in the deployment spec (the `Owner` role is needed for ACR role assignments).
-
-```sh
-rg=...
-aks_name=...
-acr_name=...
-az aks update --resource-group $rg --name $aks_name --attach-acr $acr_name
-```
-
 If you're not a subscription owner, you can configure the Periscope deployment to authenticate using the ACR's Admin account. To enable the admin account on the ACR, run:
 
 ```sh
 acr_name=...
 az acr update -n $acr_name --admin-enabled true
+
 ```
 
 #### 2. Set Environment Variables for ACR
@@ -61,6 +53,17 @@ docker manifest create $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:$IMAGE_TAG-linux $IMAG
 docker manifest push $IMAGE_NAME:$IMAGE_TAG
 ```
 
+#### 4. Authorise Cluster to use ACR
+
+Any cluster can be used, we use Azure Kubernetes Cluster (AKS). If the AKS cluster and ACR are in a subscription in which you have the `Owner` role, you can attach the ACR to your cluster without the need to supply credentials in the deployment spec (the `Owner` role is needed for ACR role assignments).
+
+```sh
+rg=...
+aks_name=...
+acr_name=...
+az aks update --resource-group $rg --name $aks_name --attach-acr $acr_name
+```
+
 ### Publishing to GHCR
 
 #### 1. Run the Publish Workflow
@@ -83,9 +86,25 @@ export IMAGE_NAME=ghcr.io/${repo_username}/aks/periscope
 
 This only needs to be done once for each of the Linux and Windows packages. Under Package Settings in GitHub, set each package's visibility to 'public'.
 
+### Local image registry
+
+You can build and run Periscope locally in a local `Kind` cluster and local image registry such as `docker`. Because `Kind` runs on Linux only, the Linux `DaemonSet` will refer to the locally-built image, whereas the Windows `DaemonSet` will refer to the latest published production Windows MCR image (to test Windows changes, use previous options).
+
+#### 1. Build Locally (Linux only)
+
+Build and load the image in `Kind`. If it's not, the pod will fail trying to pull the image (because it's local).
+
+```sh
+docker build -f ./builder/Dockerfile.linux -t periscope-local .
+# Include a --name argument here if not using the default kind cluster.
+kind load docker-image periscope-local
+```
+
 ## Setting up Configuration Data
 
-As with the `dev` overlay, you put storage account configuration into an `.env.secret` file before running `Kustomize`.
+To run correctly, Periscope requires some storage account configuration that is different for each user. It also has some optional 'diagnostic' configuration (node log locations, etc.). The environment files are `gitignore`d to avoid committing any credentials or user-specific configuration to source control.
+
+Periscope loads `Secret` from file `.env.secret` to acquire access to the storage account.
 
 ```sh
 # Create a SAS
@@ -111,8 +130,17 @@ AZURE_BLOB_ACCOUNT_NAME=${stg_account}
 AZURE_BLOB_SAS_KEY=?${sas}
 AZURE_BLOB_CONTAINER_NAME=${blob_container}
 EOF
+```
 
-# If using an ACR's admin account credentials to access the Periscope image:
+You can also override diagnostic configuration variables:
+
+```sh
+echo "DIAGNOSTIC_KUBEOBJECTS_LIST=kube-system default" > ./deployment/overlays/temp/.env.config
+```
+
+If using ACR's admin account credentials to access the Periscope image
+
+```sh
 acr_name=...
 acr_username=$(az acr credential show -n $acr_name --query username --output tsv)
 acr_password=$(az acr credential show -n $acr_name --query "passwords[0].value" --output tsv)
@@ -128,22 +156,42 @@ cat <<EOF > ./deployment/overlays/temp/acr.dockerconfigjson
 EOF
 ```
 
-You can also override diagnostic configuration variables:
+## Deploying Periscope
+
+Make sure all necessary config files are in-place:
+
+- `.env.secret`
+- `.env.config` 
+- `acr.dockerconfigjson`
+
+otherwise create the files if they don't already exist
 
 ```sh
-echo "DIAGNOSTIC_KUBEOBJECTS_LIST=kube-system default" > ./deployment/overlays/temp/.env.config
+# Create the required config files if they don't already exist
+touch ./deployment/overlays/temp/.env.config 
+touch ./deployment/overlays/temp/acr.dockerconfigjson
 ```
 
-## Deploying Periscope
+### Local Clusters
+
+This approach assumes that you have built an image locally and loaded to `Kind` as in [Local Development](#local-image-registry). It will deploy to its own namespace, `aks-periscope-dev` to avoid conflicts with any existing Periscope deployment.
+
+Once the `.env` files are in place, `Kustomize` has all the information it needs to generate the `yaml` resource specification for Periscope. We need to make sure this doesn't get into source control, so it is stored in `gitignore`d `.env` files.
+
+```sh
+# Ensure kubectl has the right cluster context
+export KUBECONFIG=...
+# Deploy
+kubectl apply -k ./deployment/overlays/dev
+```
+
+### All clusters
 
 First ensure your environment variables are set up. See notes for [ACR](#2-set-environment-variables-for-acr) and [GHCR](#2-set-environment-variables-for-ghcr).
 
 Next you can use `envsubst` to generate a `Kustomize` overlay from the template (this is placed in the `overlays/temp` directory, which is excluded from source control), and deploy it with `kubectl`.
 
 ```sh
-# Create the required config files if they don't already exist
-touch ./deployment/overlays/temp/.env.config ./deployment/overlays/temp/acr.dockerconfigjson
-
 # Generate the kustomization.yaml
 cat ./deployment/overlays/dynamic-image/kustomization.template.yaml | envsubst > ./deployment/overlays/temp/kustomization.yaml
 
@@ -161,9 +209,17 @@ run_id=$(date -u '+%Y-%m-%dT%H-%M-%SZ')
 kubectl patch configmap -n aks-periscope diagnostic-config -p="{\"data\":{\"DIAGNOSTIC_RUN_ID\": \"$run_id\"}}"
 ```
 
----
+### Deploy Periscope to AKS with ACR
+
+A [utlity script](./deploy_dev_linux.sh) is provided to build image and deploy to the AKS cluster in one line:
+
+```sh
+./deploy_dev_linux.sh "<SUB_ID>" "<rg>" "<cluster-name>" "<acr-name>" "<storage-account>" "<blob-container-name" "<image-tag>" "<docker/acr>"
+```
 
 ## Footnotes
+
+## Using other clusters
 
 ### Creating a Windows Cluster
 

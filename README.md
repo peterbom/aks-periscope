@@ -223,24 +223,6 @@ AKS Periscope can also be deployed by using the [VS Code AKS extension](https://
 
 You first need to configure your cluster's diagnostic settings to use a storage account [as explained here](https://github.com/Azure/vscode-aks-tools#configuring-storage-account). You can then right-click on the cluster and select `Run AKS Periscope` to run the tool and upload the result. The results can be downloaded directly from VS Code. For more detail how this feature works [please refer here](https://github.com/Azure/vscode-aks-tools#aks-periscope).
 
-## Programming Guide
-
-To locally build this project from the root of this repository:
-
-```sh
-CGO_ENABLED=0 GOOS=linux go build -mod=mod github.com/Azure/aks-periscope/cmd/aks-periscope
-```
-
-### Automated Tests
-
-See [this guide](./docs/testing.md) for running automated tests in a CI or development environment.
-
-### Manual Testing
-
-You can build and run Periscope locally in a `Kind` cluster using the ['dev' Kustomize overlay notes](./deployment/overlays/dev/README.md).
-
-To build and push a Docker image to an external registry (GHCR or ACR), and then deploy that to any (local or cloud-hosted) cluster, please refer to the ['dynamic-image' Kustomize overlay notes](./deployment/overlays/dynamic-image/README.md#ghcr).
-
 ## Dependent Consuming Tools and Working Contract
 
 Dependent tools need access to an immutable, versioned Periscope resource definition. We provide two ways to obtain this:

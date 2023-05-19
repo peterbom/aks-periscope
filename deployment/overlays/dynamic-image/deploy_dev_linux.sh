@@ -15,29 +15,26 @@ export BUILDER="${8}"
 
 # the script needs to run at the root directory
 curr_dir=${PWD}
-work_dir=$curr_dir
+work_dir=$(git rev-parse --show-toplevel)
+
+while [ ! -d "${work_dir}/builder" ]
+do
+  work_dir="$(dirname "$work_dir")"
+done
+
+dev_deployment_dir=$work_dir/dev/temp
+
+cd ${work_dir}
 
 function cleanup() {
-    # rm -rf ./deployment/overlays/temp
+    # rm -rf $dev_deployment_dir
     cd $curr_dir
 }
 
 trap cleanup EXIT
 
-
-while [ ! -d "${work_dir}/builder" ]
-do 
-  work_dir="$(dirname "$work_dir")"
-done
-
-
-cd ${work_dir}
-echo "set working directory to "${PWD}
-
-az account set --subscription $SUB_ID
 echo "login to ACR"
-
-az acr login -n ${ACR}
+az account set --subscription $SUB_ID && az acr login -n ${ACR}
 
 # build testing images in ACR
 echo "building images to deploy"
@@ -59,8 +56,6 @@ else
   docker manifest push $IMAGE_NAME:$IMAGE_TAG
 fi
 
-
-
 # export env secret
 sas_expiry=`date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ'`
 sas=$(az storage account generate-sas \
@@ -77,10 +72,10 @@ echo "setup ACR to for AKS"
 az aks update --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --attach-acr ${ACR}
 
 echo "prepare kustomization to deploy"
-rm -rf ./deployment/overlays/temp && mkdir ./deployment/overlays/temp
+rm -rf $dev_deployment_dir && mkdir $dev_deployment_dir
 
 echo "writing .env.secret file"
-cat << EOF > ./deployment/overlays/temp/.env.secret
+cat << EOF > $dev_deployment_dir/.env.secret
 AZURE_BLOB_ACCOUNT_NAME=${STORAGE_ACCOUNT}
 AZURE_BLOB_SAS_KEY=?${sas}
 AZURE_BLOB_CONTAINER_NAME=${BLOB_CONTAINER}
@@ -90,7 +85,7 @@ echo "writing acr.dockerconfigjson file"
 acr_username=$(az acr credential show -n ${ACR} --query username --output tsv)
 acr_password=$(az acr credential show -n ${ACR} --query "passwords[0].value" --output tsv)
 
-cat << EOF > ./deployment/overlays/temp/acr.dockerconfigjson
+cat << EOF > $dev_deployment_dir/acr.dockerconfigjson
 {
     "auths": {
         "${ACR}.azurecr.io": {
@@ -102,11 +97,11 @@ cat << EOF > ./deployment/overlays/temp/acr.dockerconfigjson
 EOF
 
 echo "use default .env.config file"
-touch  ./deployment/overlays/temp/.env.config
+touch  $dev_deployment_dir/.env.config
 
 # Generate the kustomization.yaml
-echo "Generating overlay kustomization.yaml"
-cat ./deployment/overlays/dynamic-image/kustomization.template.yaml | envsubst > ./deployment/overlays/temp/kustomization.yaml
+echo "Generating dev kustomization.yaml"
+cat ./deployment/overlays/dynamic-image/kustomization.template.yaml | envsubst > $dev_deployment_dir/kustomization.yaml
 
 echo "deploying artifacts"
-kubectl apply -k ./deployment/overlays/temp
+kubectl apply -k $dev_deployment_dir/temp
