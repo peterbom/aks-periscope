@@ -8,8 +8,8 @@ CGO_ENABLED=0 GOOS=linux go build -mod=mod github.com/Azure/aks-periscope/cmd/ak
 
 ## Automated Tests
 
-See [this guide](../../../docs/testing.md) for running automated tests in a CI or development environment.
+See [this guide](testing.md) for running automated tests in a CI or development environment.
 
 ## Manual Testing
 
-See [Dynamic image overlay](../dynamic-image/README.md) to deploy changes to your cluster.
+See [Dynamic image overlay](../deployment/overlays/dynamic-image/README.md) to deploy changes to your cluster.
